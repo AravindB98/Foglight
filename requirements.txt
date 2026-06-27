@@ -1,0 +1,24 @@
+# Foglight core runs on the Python standard library — nothing required here.
+# The packages below are OPTIONAL power-ups, each detected at runtime.
+
+# --- channels -------------------------------------------------------------
+feedparser>=6.0        # better RSS parsing (stdlib fallback exists)
+# GitHub  : install the `gh` CLI         (https://cli.github.com)
+# YouTube : pip install yt-dlp
+# Reddit  : pip install rdt-cli  (then run `rdt login` once)
+
+# --- memory (optional semantic recall) ------------------------------------
+chromadb>=0.5          # enables the vector memory backend
+
+# --- synthesis (LLM briefs, optional) -------------------------------------
+anthropic>=0.40        # only used if ANTHROPIC_API_KEY is set
+
+# --- API + dashboard (optional) -------------------------------------------
+fastapi>=0.110
+uvicorn>=0.29
+
+# --- MCP server (optional) ------------------------------------------------
+mcp>=1.2
+
+# --- dev ------------------------------------------------------------------
+pytest>=8.0

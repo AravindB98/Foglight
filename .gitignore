@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtual envs
+venv/
+.venv/
+env/
+
+# Secrets / config
+.env
+
+# Foglight runtime data
+foglight.db
+*.db
+.foglight_vec/
+.foglight/
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/

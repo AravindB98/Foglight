@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Foglight — Internet Intelligence</title>
+<style>
+  :root{
+    --bg:#0a0e14; --panel:#121826; --line:#222c3f; --ink:#e6edf6;
+    --muted:#8aa0bd; --accent:#4dc9ff; --accent2:#7ce38b; --warn:#ffb454;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:15px/1.55 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+       background:var(--bg);color:var(--ink)}
+  header{padding:22px 28px;border-bottom:1px solid var(--line);display:flex;
+         align-items:center;gap:14px}
+  header h1{font-size:20px;margin:0;letter-spacing:.5px}
+  header .eye{font-size:24px}
+  header small{color:var(--muted);font-weight:400}
+  .wrap{max-width:1040px;margin:0 auto;padding:24px 28px}
+  .bar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+  input,select,button{font:inherit;border-radius:10px;border:1px solid var(--line);
+       background:var(--panel);color:var(--ink);padding:11px 14px}
+  input{flex:1;min-width:240px}
+  button{cursor:pointer;border-color:transparent;background:var(--accent);color:#04121c;
+         font-weight:600}
+  button.alt{background:var(--panel);color:var(--ink);border-color:var(--line)}
+  .tabs{display:flex;gap:8px;margin-bottom:18px}
+  .tabs button{background:var(--panel);color:var(--muted);font-weight:500}
+  .tabs button.on{background:var(--accent);color:#04121c}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+  .tier{display:inline-block;font-size:11px;text-transform:uppercase;letter-spacing:.6px;
+        padding:2px 8px;border-radius:999px;background:#1c2740;color:var(--accent);margin-bottom:8px}
+  .tier.social{color:var(--warn)} .tier.scholarly{color:var(--accent2)}
+  .card h3{margin:.2em 0;font-size:15px}
+  .card a{color:var(--muted);font-size:12px;word-break:break-all;text-decoration:none}
+  .card p{color:var(--muted);font-size:13px;margin:.5em 0 0}
+  .brief{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+         padding:22px;white-space:pre-wrap}
+  .muted{color:var(--muted)} .row{display:flex;gap:8px;align-items:center}
+  .status{font-size:13px}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:7px}
+  .ok{background:var(--accent2)} .no{background:#5a6b85}
+</style>
+</head>
+<body>
+<header>
+  <span class="eye">👁</span>
+  <h1>FOGLIGHT <small>· all-seeing internet intelligence</small></h1>
+</header>
+<div class="wrap">
+  <div class="bar">
+    <input id="api" value="http://127.0.0.1:8000" title="API base URL" style="flex:0 0 230px"/>
+    <input id="q" placeholder="Ask about a topic — e.g. 'AI agents in healthcare'" />
+    <select id="limit"><option>8</option><option>12</option><option>20</option></select>
+    <button onclick="run()">Search</button>
+    <button class="alt" onclick="brief()">Brief</button>
+  </div>
+
+  <div class="tabs">
+    <button class="on" id="t-results" onclick="show('results')">Results</button>
+    <button id="t-brief" onclick="show('brief')">Brief</button>
+    <button id="t-status" onclick="show('status')">Status</button>
+  </div>
+
+  <div id="results" class="grid"></div>
+  <div id="brief" class="brief" style="display:none"><span class="muted">Run “Brief” to synthesize a cited digest.</span></div>
+  <div id="status" style="display:none"></div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const api = () => $("#api").value.replace(/\/$/,"");
+function show(id){
+  for(const v of ["results","brief","status"]){
+    $("#"+v).style.display = v===id ? (v==="results"?"grid":"block") : "none";
+    $("#t-"+v).classList.toggle("on", v===id);
+  }
+  if(id==="status") status();
+}
+async function run(){
+  show("results");
+  const el=$("#results"); el.innerHTML='<span class="muted">Searching…</span>';
+  try{
+    const r=await fetch(`${api()}/search?q=${encodeURIComponent($("#q").value)}&limit=${$("#limit").value}`);
+    const items=await r.json();
+    el.innerHTML = items.map(it=>`
+      <div class="card">
+        <span class="tier ${it.tier}">${it.tier}</span>
+        <h3>${esc(it.title)}</h3>
+        <div class="muted" style="font-size:12px">${esc(it.source)} · ${esc(it.author||"")}</div>
+        <p>${esc((it.text||"").slice(0,180))}…</p>
+        ${it.url?`<a href="${it.url}" target="_blank" rel="noopener">${esc(it.url)}</a>`:""}
+      </div>`).join("") || '<span class="muted">No results.</span>';
+  }catch(e){ el.innerHTML=`<span class="muted">API not reachable. Start it with <code>foglight serve</code>. (${e})</span>`; }
+}
+async function brief(){
+  show("brief");
+  const el=$("#brief"); el.textContent="Synthesizing…";
+  try{
+    const r=await fetch(`${api()}/brief`,{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({query:$("#q").value,limit:Number($("#limit").value)})});
+    const b=await r.json(); el.textContent=b.markdown;
+  }catch(e){ el.textContent="API not reachable. Start it with `foglight serve`. "+e; }
+}
+async function status(){
+  const el=$("#status"); el.innerHTML='<span class="muted">Checking…</span>';
+  try{
+    const r=await fetch(`${api()}/doctor`); const rows=await r.json();
+    el.innerHTML='<div class="card">'+rows.map(x=>`
+      <div class="row status"><span class="dot ${x.ok?'ok':'no'}"></span>
+      <b>${esc(x.component)}</b><span class="muted">&nbsp;— ${esc(x.detail)}</span></div>`).join("")+'</div>';
+  }catch(e){ el.innerHTML=`<span class="muted">API not reachable (${e}).</span>`; }
+}
+function esc(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+$("#q").addEventListener("keydown",e=>{if(e.key==="Enter")run();});
+</script>
+</body>
+</html>
