@@ -25,8 +25,10 @@ TIER_CODE = "code"             # repos, issues, commits
 TIER_VIDEO = "video"           # video / podcast transcripts
 TIER_SOCIAL = "social"         # forum threads, comments, posts
 TIER_WEB = "web"               # generic web pages
+TIER_INTEL = "intel"           # passive domain/entity intelligence facts
 
-ALL_TIERS = [TIER_SCHOLARLY, TIER_NEWS, TIER_CODE, TIER_VIDEO, TIER_SOCIAL, TIER_WEB]
+ALL_TIERS = [TIER_SCHOLARLY, TIER_NEWS, TIER_CODE, TIER_VIDEO, TIER_SOCIAL,
+             TIER_WEB, TIER_INTEL]
 
 
 def stable_id(*parts: str) -> str:

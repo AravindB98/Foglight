@@ -12,7 +12,9 @@ from foglight.schema import ContentItem, Entity, Relation, TIER_SOCIAL
 from foglight.memory import SQLiteMemory
 from foglight.graph import TemporalGraph
 from foglight.dedup import cluster_items
-from foglight import analytics, synthesis, extract
+from foglight import analytics, synthesis, extract, alerts
+from foglight.channels import domain
+from foglight.schema import Cluster
 
 
 class TestSchema(unittest.TestCase):
@@ -113,6 +115,52 @@ class TestSynthesis(unittest.TestCase):
         self.assertIn("# Brief", b.markdown)
         self.assertIn("References", b.markdown)
         self.assertTrue(b.item_ids)
+
+
+class TestDomainChannel(unittest.TestCase):
+    def test_registered(self):
+        self.assertIn("domain", channels_pkg.all_channels())
+
+    def test_guard_ignores_non_domains(self):
+        # not a domain -> no network call, empty result
+        self.assertEqual(
+            channels_pkg.get("domain").search("AI agents in healthcare"), [])
+
+    def test_normalize_domain(self):
+        self.assertEqual(
+            domain._normalize_domain("https://www.Example.com/x?y=1"),
+            "example.com")
+        self.assertIsNone(domain._normalize_domain("hello world"))
+        self.assertIsNone(domain._normalize_domain("notadomain"))
+
+
+class TestAlerts(unittest.TestCase):
+    def _clusters(self):
+        return [
+            Cluster(key="k1", title="Big story", item_ids=["x", "y"],
+                    sources=["reddit", "news"], size=2, score=3.0),
+            Cluster(key="k2", title="Minor", item_ids=["z"],
+                    sources=["reddit"], size=1, score=1.0),
+        ]
+
+    def test_build_alerts_only_corroborated_new(self):
+        out = alerts.build_alerts(self._clusters(), {"x"})
+        self.assertEqual(len(out), 1)
+        self.assertEqual(out[0].title, "Big story")
+
+    def test_build_alerts_skips_when_not_new(self):
+        self.assertEqual(alerts.build_alerts(self._clusters(), {"nope"}), [])
+
+    def test_console_dispatch(self):
+        n = alerts.ConsoleNotifier()
+        self.assertTrue(n.check()[0])
+        self.assertEqual(alerts.dispatch([alerts.Alert("t", "s")], [n]),
+                         {"console": True})
+        self.assertEqual(alerts.dispatch([]), {})
+
+    def test_configured_notifiers_includes_console(self):
+        self.assertIn("console",
+                      [n.name for n in alerts.configured_notifiers()])
 
 
 if __name__ == "__main__":

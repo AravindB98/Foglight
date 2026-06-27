@@ -18,6 +18,7 @@ from typing import List, Optional
 
 from . import channels as channels_pkg
 from . import extract
+from . import alerts as alerts_mod
 from .dedup import cluster_items
 from .graph import TemporalGraph
 from .memory import MemoryBackend
@@ -40,6 +41,7 @@ class WatchResult:
     fetched: int
     new_items: List[ContentItem]
     top_clusters: list
+    alerts: list = field(default_factory=list)
 
 
 class Monitor:
@@ -107,8 +109,10 @@ class Monitor:
         self._db.commit()
 
         clusters = cluster_items(items)
-        return WatchResult(name=name, fetched=len(items),
-                           new_items=new_items, top_clusters=clusters[:5])
+        new_ids = {it.id for it in new_items}
+        fired = alerts_mod.build_alerts(clusters, new_ids)
+        return WatchResult(name=name, fetched=len(items), new_items=new_items,
+                           top_clusters=clusters[:5], alerts=fired)
 
     def tick(self) -> List[WatchResult]:
         """Run every watchlist that is currently due (host calls this)."""

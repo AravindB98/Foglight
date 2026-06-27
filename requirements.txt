@@ -6,6 +6,11 @@ feedparser>=6.0        # better RSS parsing (stdlib fallback exists)
 # GitHub  : install the `gh` CLI         (https://cli.github.com)
 # YouTube : pip install yt-dlp
 # Reddit  : pip install rdt-cli  (then run `rdt login` once)
+# Domain  : no dependency — passive RDAP/DNS/CT/tech over stdlib HTTPS
+
+# --- alerts (optional) ----------------------------------------------------
+# No dependency — console/Slack/email run on the standard library.
+# Configure Slack/email via env vars (see .env.example).
 
 # --- memory (optional semantic recall) ------------------------------------
 chromadb>=0.5          # enables the vector memory backend

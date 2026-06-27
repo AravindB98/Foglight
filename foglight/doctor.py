@@ -10,6 +10,7 @@ import os
 from typing import List, Tuple
 
 from . import channels as channels_pkg
+from . import alerts as alerts_mod
 from .graph import TemporalGraph
 from .memory import get_memory
 
@@ -37,6 +38,10 @@ def collect(db_path: str = "foglight.db") -> List[Tuple[str, bool, str]]:
     rows.append(("key:anthropic", bool(os.getenv("ANTHROPIC_API_KEY")),
                  "LLM rerank/synthesis" if os.getenv("ANTHROPIC_API_KEY")
                  else "optional — enables LLM briefs"))
+
+    for n in alerts_mod.configured_notifiers():
+        ok, msg = n.check()
+        rows.append((f"alerts:{n.name}", ok, msg))
     return rows
 
 

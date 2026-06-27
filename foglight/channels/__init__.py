@@ -15,5 +15,6 @@ from . import web       # noqa: F401
 from . import github    # noqa: F401
 from . import youtube   # noqa: F401
 from . import reddit    # noqa: F401
+from . import domain    # noqa: F401  (passive domain/entity intelligence)
 
 __all__ = ["Channel", "register", "get", "all_channels", "search"]

@@ -7,7 +7,8 @@ Subcommands:
     remember <query>       search + store into memory
     recall  <query>        semantic/keyword recall from memory
     brief   <query>        fetch + synthesize a cited brief (+ mine graph)
-    watch add/list/run     manage monitoring watchlists
+    watch add/list/run     manage monitoring watchlists (run dispatches alerts)
+    alerts test/status     test or inspect alert notifiers
     graph   stats          knowledge-graph summary
     serve                  run the REST API (needs fastapi/uvicorn)
 
@@ -21,6 +22,7 @@ import sys
 
 from . import channels as channels_pkg
 from . import synthesis, doctor as doctor_mod, extract
+from . import alerts as alerts_mod
 from .memory import get_memory
 from .monitor import Monitor, Watchlist
 from .graph import TemporalGraph
@@ -93,6 +95,23 @@ def cmd_watch(args):
               f"{len(res.new_items)} new since last run")
         for c in res.top_clusters:
             print(f"   • {c.title} ({c.size} across {', '.join(c.sources)})")
+        if res.alerts:
+            sent = alerts_mod.dispatch(res.alerts)
+            ok = ", ".join(k for k, v in sent.items() if v) or "none"
+            print(f"   ↳ {len(res.alerts)} alert(s) dispatched via: {ok}")
+
+
+def cmd_alerts(args):
+    if args.action == "status":
+        for n in alerts_mod.configured_notifiers():
+            ok, msg = n.check()
+            print(f"  {'✅' if ok else '⬜'} {n.name:<9} {msg}")
+    elif args.action == "test":
+        sample = [alerts_mod.Alert(
+            title="Test alert", summary="Foglight notifier check",
+            score=1.0, sources=["foglight"])]
+        sent = alerts_mod.dispatch(sample)
+        print("dispatched:", sent)
 
 
 def cmd_graph(args):
@@ -146,6 +165,10 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("-c", "--channels", nargs="*", default=None)
     sp.add_argument("--interval", type=float, default=24.0)
     sp.set_defaults(func=cmd_watch)
+
+    sp = sub.add_parser("alerts")
+    sp.add_argument("action", choices=["test", "status"])
+    sp.set_defaults(func=cmd_alerts)
 
     sp = sub.add_parser("graph"); sp.add_argument("sub", nargs="?", default="stats")
     sp.set_defaults(func=cmd_graph)

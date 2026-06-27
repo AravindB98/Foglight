@@ -19,6 +19,7 @@ except Exception as exc:  # pragma: no cover
 
 from . import channels as channels_pkg
 from . import synthesis, doctor as doctor_mod, extract
+from . import alerts as alerts_mod
 from .graph import TemporalGraph
 from .memory import get_memory
 from .monitor import Monitor, Watchlist
@@ -98,12 +99,33 @@ def add_watch(req: WatchReq):
 @app.post("/watchlists/{name}/run")
 def run_watch(name: str):
     res = _mon.run(name)
+    sent = alerts_mod.dispatch(res.alerts) if res.alerts else {}
     return {"name": res.name, "fetched": res.fetched,
             "new": [it.to_dict() for it in res.new_items],
-            "clusters": [c.to_dict() for c in res.top_clusters]}
+            "clusters": [c.to_dict() for c in res.top_clusters],
+            "alerts": [a.__dict__ for a in res.alerts], "dispatched": sent}
 
 
 @app.post("/tick")
 def tick():
-    return [{"name": r.name, "fetched": r.fetched, "new": len(r.new_items)}
-            for r in _mon.tick()]
+    out = []
+    for r in _mon.tick():
+        if r.alerts:
+            alerts_mod.dispatch(r.alerts)
+        out.append({"name": r.name, "fetched": r.fetched,
+                    "new": len(r.new_items), "alerts": len(r.alerts)})
+    return out
+
+
+@app.post("/alerts/test")
+def alerts_test():
+    sample = [alerts_mod.Alert(title="Test alert",
+                               summary="Foglight notifier check",
+                               score=1.0, sources=["foglight"])]
+    return {"dispatched": alerts_mod.dispatch(sample)}
+
+
+@app.get("/alerts/status")
+def alerts_status():
+    return [{"notifier": n.name, "ok": n.check()[0], "detail": n.check()[1]}
+            for n in alerts_mod.configured_notifiers()]

@@ -31,7 +31,10 @@ A `Channel` is one file exposing `check()` / `search()` / `read()` and
 returning `ContentItem`s. The registry fans a query out across all *ready*
 channels. Shipped: `mock` (offline sample data), `web` (URL → clean text),
 `rss` (feeds), `github` (`gh` CLI), `youtube` (`yt-dlp`), `reddit` (`rdt`
-CLI). Adding a source is one new file plus a `@register` decorator.
+CLI), and `domain` (passive, keyless domain intelligence — RDAP/WHOIS, DNS
+over HTTPS, certificate-transparency subdomains, tech-stack from headers;
+domain-guarded so it ignores non-domain queries). Adding a source is one new
+file plus a `@register` decorator.
 
 ### 2. Memory & Scheduling — `memory.py`, `monitor.py`
 `MemoryBackend` is an interface with two implementations:
@@ -56,6 +59,10 @@ delegated to the host via `due()` / `tick()`.
   (`valid_from`/`valid_to`, `invalidate`, `timeline`), backed by SQLite.
 - **Analytics** gives transparent, auditable trend, term-frequency and
   lexicon-sentiment signals.
+- **Alerts** (`alerts.py`) turn corroborated, *new* cross-platform clusters
+  into notifications. Notifiers are pluggable (console always; Slack and email
+  when their env vars are set). The monitor builds alert objects (pure); the
+  CLI/API dispatch them.
 
 ### 4. Synthesis — `synthesis.py`
 Produces a `Brief`: if `ANTHROPIC_API_KEY` + `anthropic` are present it writes
@@ -65,7 +72,7 @@ social), key terms and a numbered reference list — fully offline.
 
 ## Surfaces
 - **CLI** (`cli.py`) — `doctor / search / read / remember / recall / brief /
-  watch / graph / serve`.
+  watch / alerts / graph / serve`.
 - **REST API** (`api.py`, FastAPI) — powers the dashboard and any HTTP client.
 - **MCP server** (`mcp_server.py`) — exposes Foglight as MCP tools.
 - **Dashboard** (`webui/index.html`) — single static file; the non-developer
