@@ -23,7 +23,7 @@ then switch on real sources and richer backends when you want them.
 | # | Layer | What it does | Modules |
 |---|-------|--------------|---------|
 | 1 | **Unified Data Layer** | Every platform collapses into one `ContentItem`; channels are pluggable (one file each) and exposed via API/MCP | `schema.py`, `channels/` |
-| 2 | **Memory & Scheduling** | Verbatim storage + recall so knowledge compounds; watchlists + scheduled pulls | `memory.py`, `monitor.py` |
+| 2 | **Memory & Scheduling** | Verbatim storage + recall so knowledge compounds (SQLite, vector, or the Supermemory engine); entity **profiles**; watchlists + scheduled pulls | `memory.py`, `profile.py`, `monitor.py` |
 | 3 | **Intelligence** | Cross-platform dedup/clustering, a **temporal knowledge graph**, trend + sentiment analytics, and **alerts** (console/Slack/email) on corroborated stories | `dedup.py`, `graph.py`, `analytics.py`, `extract.py`, `alerts.py` |
 | 4 | **Synthesis** | On-demand **cited briefs / digests** (LLM optional, extractive fallback) | `synthesis.py` |
 
@@ -49,7 +49,8 @@ then switch on real sources and richer backends when you want them.
             │ github (gh CLI)       │
             │ youtube (yt-dlp)      │
             │ reddit (rdt CLI)      │
-            │ domain (whois/dns/ct) │   ← add a source = add one file
+            │ domain (whois/dns/ct) │
+            │ files  (local + PDF)  │   ← add a source = add one file
             └───────────────────────┘
 ```
 
@@ -70,6 +71,8 @@ python -m foglight watch run --name ai          # what's new since last run (+ a
 python -m foglight graph stats                  # entities/relations mined so far
 python -m foglight search example.com -c domain # passive domain intel (whois/dns/ct/tech)
 python -m foglight alerts status                # which notifiers are live
+python -m foglight ingest ./docs                # ingest local files into memory + graph
+python -m foglight profile "OpenAI"             # entity profile: associations + recent activity
 ```
 
 ### Switch on real sources & richer backends
@@ -80,8 +83,11 @@ python -m foglight alerts status                # which notifiers are live
 #   YouTube  -> yt-dlp    (pip install yt-dlp)
 #   Reddit   -> rdt       (then run `rdt login` once)
 
-# Semantic recall (optional vector backend):
-pip install chromadb
+# Richer memory (optional, auto-detected):
+pip install chromadb                          # vector backend (semantic recall)
+pip install supermemory                       # Supermemory engine — set SUPERMEMORY_API_KEY,
+                                              # or run `supermemory local` + SUPERMEMORY_BASE_URL (offline)
+pip install pypdf                             # PDF text for `foglight ingest`
 
 # LLM-written briefs (optional):
 export ANTHROPIC_API_KEY=sk-...
@@ -99,8 +105,8 @@ python -m foglight serve          # then open webui/index.html
 
 ## Surfaces
 
-- **CLI** — `doctor / search / read / remember / recall / brief / watch / alerts / graph`.
-- **REST API** (`foglight serve`) — `/search /brief /recall /graph /watchlists /doctor /tick /alerts/*`.
+- **CLI** — `doctor / search / read / remember / recall / brief / watch / alerts / ingest / profile / graph`.
+- **REST API** (`foglight serve`) — `/search /brief /recall /graph /profile /watchlists /doctor /tick /alerts/*`.
 - **MCP server** — `foglight_search / foglight_brief / foglight_recall / foglight_watch_*`
   for any MCP-compatible agent.
 - **Dashboard** (`webui/index.html`) — search, briefs and a live status board
@@ -113,8 +119,9 @@ python -m foglight serve          # then open webui/index.html
 ```
 foglight/
   schema.py        normalized ContentItem / Cluster / Entity / Relation / Brief
-  channels/        pluggable sources: mock, web, rss, github, youtube, reddit, domain
-  memory.py        pluggable memory: SQLite default + optional vector backend
+  channels/        pluggable sources: mock, web, rss, github, youtube, reddit, domain, files
+  memory.py        pluggable memory: SQLite default + optional vector / Supermemory
+  profile.py       entity/topic profiles (graph-derived, or native Supermemory)
   graph.py         temporal knowledge graph (validity windows)
   extract.py       entity/relation mining that feeds the graph
   dedup.py         cross-platform clustering

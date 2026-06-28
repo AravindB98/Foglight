@@ -56,6 +56,11 @@ class MemoryBackend(ABC):
     def check(self):
         return True, f"{self.name} ready"
 
+    def profile(self, space: str = "", query: str = ""):
+        """Return a native {static, dynamic} profile if the backend supports
+        one, else None (callers fall back to a graph-derived profile)."""
+        return None
+
 
 # --------------------------------------------------------------------------- #
 # Default backend: SQLite, stdlib only
@@ -226,9 +231,110 @@ class VectorMemory(MemoryBackend):
         return True, "vector store ready (semantic recall)"
 
 
+# --------------------------------------------------------------------------- #
+# Optional backend: Supermemory engine (SDK — hosted API or local server)
+# --------------------------------------------------------------------------- #
+class SupermemoryMemory(MemoryBackend):
+    """Memory backed by the Supermemory engine.
+
+    Uses the ``supermemory`` Python SDK against either the hosted API
+    (``SUPERMEMORY_API_KEY``) or a local server (``SUPERMEMORY_BASE_URL``,
+    e.g. ``http://localhost:6767`` — runs fully offline with Ollama). Brings
+    fact extraction, contradiction handling, auto-forgetting, hybrid
+    RAG+memory and native profiles. Fails fast in __init__ so
+    :func:`get_memory` falls back when it is unavailable/unconfigured.
+    """
+
+    name = "supermemory"
+
+    def __init__(self):
+        from supermemory import Supermemory   # raises if SDK absent
+        self._key = os.getenv("SUPERMEMORY_API_KEY", "")
+        self._base = os.getenv("SUPERMEMORY_BASE_URL", "")
+        if not (self._key or self._base):
+            raise RuntimeError("set SUPERMEMORY_API_KEY or SUPERMEMORY_BASE_URL")
+        kwargs = {}
+        if self._key:
+            kwargs["api_key"] = self._key
+        if self._base:
+            kwargs["base_url"] = self._base
+        self._client = Supermemory(**kwargs)
+        self._default = "foglight"
+
+    @staticmethod
+    def _field(row, key, default=""):
+        return (row.get(key, default) if isinstance(row, dict)
+                else getattr(row, key, default))
+
+    def remember(self, items, space="", topic=""):
+        tag = space or topic or self._default
+        n = 0
+        for it in items:
+            try:
+                self._client.add(content=f"{it.title}\n\n{it.text}".strip(),
+                                 container_tag=tag,
+                                 metadata={"source": it.source, "tier": it.tier,
+                                           "url": it.url, "title": it.title})
+                n += 1
+            except Exception:
+                continue
+        return n
+
+    def recall(self, query, k=10, space="", topic=""):
+        tag = space or topic or self._default
+        out: List[ContentItem] = []
+        try:
+            res = self._client.search.memories(q=query, container_tag=tag,
+                                               limit=k, search_mode="hybrid")
+        except Exception:
+            return out
+        rows = (self._field(res, "results", None)
+                or self._field(res, "memories", None) or [])
+        for r in list(rows)[:k]:
+            out.append(ContentItem(
+                source=self._field(r, "source", "supermemory") or "supermemory",
+                tier=self._field(r, "tier", "web") or "web",
+                title=self._field(r, "title", ""),
+                url=self._field(r, "url", ""),
+                text=(self._field(r, "content") or self._field(r, "memory")
+                      or self._field(r, "text", ""))))
+        return out
+
+    def profile(self, space="", query=""):
+        tag = space or self._default
+        try:
+            res = self._client.profile(container_tag=tag, q=query or None)
+        except Exception:
+            return None
+        prof = self._field(res, "profile", None)
+        if prof is None:
+            return None
+        return {"static": list(self._field(prof, "static", []) or []),
+                "dynamic": list(self._field(prof, "dynamic", []) or [])}
+
+    def stats(self):
+        return {"backend": "supermemory",
+                "mode": "local" if self._base else "hosted"}
+
+    def check(self):
+        return True, ("supermemory ready (local server)" if self._base
+                      else "supermemory ready (hosted API)")
+
+
 def get_memory(backend: str = "auto", path: str = "foglight.db") -> MemoryBackend:
-    """Factory. ``auto`` prefers the vector backend, falls back to SQLite."""
+    """Factory. ``auto`` prefers Supermemory, then the vector store, then SQLite.
+
+    Each optional backend fails fast when unavailable, so ``auto`` always
+    resolves to a working backend (SQLite at worst). An explicit backend name
+    raises if that backend cannot be constructed.
+    """
     backend = backend or "auto"
+    if backend in ("auto", "supermemory"):
+        try:
+            return SupermemoryMemory()
+        except Exception:
+            if backend == "supermemory":
+                raise
     if backend in ("auto", "vector"):
         try:
             return VectorMemory()

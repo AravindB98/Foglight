@@ -93,6 +93,11 @@ class TemporalGraph:
         ).fetchone()
         return Entity(name=r["name"], type=r["type"], space=r["space"]) if r else None
 
+    def entity_by_id(self, eid: str) -> Optional[Entity]:
+        r = self._db.execute(
+            "SELECT * FROM entities WHERE id=?", (eid,)).fetchone()
+        return Entity(name=r["name"], type=r["type"], space=r["space"]) if r else None
+
     def stats(self) -> dict:
         e = self._db.execute("SELECT COUNT(*) c FROM entities").fetchone()["c"]
         r = self._db.execute("SELECT COUNT(*) c FROM relations").fetchone()["c"]

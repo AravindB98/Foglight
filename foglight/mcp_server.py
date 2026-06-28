@@ -19,6 +19,7 @@ except Exception as exc:  # pragma: no cover
 
 from . import channels as channels_pkg
 from . import synthesis, extract
+from . import profile as profile_mod
 from .graph import TemporalGraph
 from .memory import get_memory
 from .monitor import Monitor, Watchlist
@@ -50,6 +51,12 @@ def foglight_brief(query: str, limit: int = 12) -> str:
 def foglight_recall(query: str, limit: int = 10) -> list:
     """Recall previously remembered items from Foglight memory."""
     return [it.to_dict() for it in _mem.recall(query, k=limit)]
+
+
+@mcp.tool()
+def foglight_profile(name: str) -> dict:
+    """Entity/topic profile: durable associations + recent activity."""
+    return profile_mod.build(name, DB, _mem).to_dict()
 
 
 @mcp.tool()

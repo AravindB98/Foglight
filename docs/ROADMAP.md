@@ -6,7 +6,9 @@ Status legend: ✅ scaffolded & runnable · 🟡 partial/stub · ⬜ planned
 - ✅ Normalized `ContentItem` schema + tiers
 - ✅ Pluggable channel registry (mock, web, rss, github, youtube, reddit)
 - ✅ Passive domain/entity intelligence channel (RDAP/WHOIS, DNS, CT, tech-stack)
-- ✅ Pluggable memory (SQLite default + optional vector backend)
+- ✅ Local file/document ingestion channel (text/code/JSON/HTML + optional PDF)
+- ✅ Pluggable memory (SQLite default + optional vector + Supermemory backend)
+- ✅ Entity/topic profiles (graph-derived, or native Supermemory)
 - ✅ Temporal knowledge graph (validity windows)
 - ✅ Entity/relation extraction feeding the graph
 - ✅ Cross-platform dedup/clustering
@@ -28,6 +30,8 @@ Status legend: ✅ scaffolded & runnable · 🟡 partial/stub · ⬜ planned
 ## Phase 2 — Deeper memory
 - ⬜ First-class vector backend config (model choice, persistence path)
 - ⬜ Auto-mine briefs and watchlist digests back into memory
+- ⬜ Multi-modal ingestion (image OCR, audio/video transcription) via the
+      Supermemory backend or optional local extractors
 - ⬜ LLM-assisted entity/relation extraction for higher graph precision
 
 ## Phase 3 — Intelligence that compounds

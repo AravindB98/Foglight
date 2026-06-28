@@ -20,6 +20,7 @@ except Exception as exc:  # pragma: no cover
 from . import channels as channels_pkg
 from . import synthesis, doctor as doctor_mod, extract
 from . import alerts as alerts_mod
+from . import profile as profile_mod
 from .graph import TemporalGraph
 from .memory import get_memory
 from .monitor import Monitor, Watchlist
@@ -82,6 +83,11 @@ def recall(q: str, limit: int = 10):
 @app.get("/graph")
 def graph():
     return _graph.stats()
+
+
+@app.get("/profile")
+def profile(q: str):
+    return profile_mod.build(q, DB, _mem).to_dict()
 
 
 @app.get("/watchlists")

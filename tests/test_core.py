@@ -9,11 +9,12 @@ import unittest
 
 from foglight import channels as channels_pkg
 from foglight.schema import ContentItem, Entity, Relation, TIER_SOCIAL
-from foglight.memory import SQLiteMemory
+from foglight.memory import SQLiteMemory, get_memory
 from foglight.graph import TemporalGraph
 from foglight.dedup import cluster_items
 from foglight import analytics, synthesis, extract, alerts
-from foglight.channels import domain
+from foglight import profile as profile_mod
+from foglight.channels import domain, files
 from foglight.schema import Cluster
 
 
@@ -161,6 +162,50 @@ class TestAlerts(unittest.TestCase):
     def test_configured_notifiers_includes_console(self):
         self.assertIn("console",
                       [n.name for n in alerts.configured_notifiers()])
+
+
+class TestMemoryFactory(unittest.TestCase):
+    def test_auto_always_resolves(self):
+        mem = get_memory("auto", os.path.join(tempfile.mkdtemp(), "m.db"))
+        self.assertIn(mem.name, ("sqlite", "vector", "supermemory"))
+
+    def test_explicit_supermemory_raises_when_unconfigured(self):
+        # no SDK / no env -> explicit request must raise, not silently fall back
+        with self.assertRaises(Exception):
+            get_memory("supermemory")
+
+
+class TestFileChannel(unittest.TestCase):
+    def test_registered(self):
+        self.assertIn("files", channels_pkg.all_channels())
+
+    def test_guard_ignores_non_paths(self):
+        self.assertEqual(channels_pkg.get("files").search("AI agents"), [])
+
+    def test_ingest_text_and_code(self):
+        d = tempfile.mkdtemp()
+        with open(os.path.join(d, "note.md"), "w") as fh:
+            fh.write("# Title\nsome notes about kafka")
+        with open(os.path.join(d, "code.py"), "w") as fh:
+            fh.write("def f():\n    return 1\n")
+        items = channels_pkg.get("files").read(d)
+        self.assertEqual(len(items), 2)
+        tiers = {it.tier for it in items}
+        self.assertIn("code", tiers)
+        self.assertTrue(any("kafka" in it.text for it in items))
+
+
+class TestProfile(unittest.TestCase):
+    def test_build_profile_from_graph_and_memory(self):
+        db = os.path.join(tempfile.mkdtemp(), "p.db")
+        mem = SQLiteMemory(db)
+        items = channels_pkg.search("Quantum Computing", channels=["mock"], limit=8)
+        mem.remember(items)
+        extract.populate_graph(TemporalGraph(db), items)
+        p = profile_mod.build("OpenAI", db, mem)
+        self.assertTrue(p.entity_known)
+        self.assertTrue(p.static or p.dynamic)
+        self.assertEqual(p.source, "graph")
 
 
 if __name__ == "__main__":

@@ -7,13 +7,17 @@ feedparser>=6.0        # better RSS parsing (stdlib fallback exists)
 # YouTube : pip install yt-dlp
 # Reddit  : pip install rdt-cli  (then run `rdt login` once)
 # Domain  : no dependency — passive RDAP/DNS/CT/tech over stdlib HTTPS
+# Files   : text/code/json/html need no dependency; PDF ingestion uses pypdf
+pypdf>=4.0             # optional — PDF text extraction for the files channel
 
 # --- alerts (optional) ----------------------------------------------------
 # No dependency — console/Slack/email run on the standard library.
 # Configure Slack/email via env vars (see .env.example).
 
-# --- memory (optional semantic recall) ------------------------------------
-chromadb>=0.5          # enables the vector memory backend
+# --- memory (optional) ----------------------------------------------------
+chromadb>=0.5          # enables the vector memory backend (semantic recall)
+supermemory>=3.0       # enables the Supermemory backend (hosted API or local
+                       # server: run `supermemory local`, set SUPERMEMORY_BASE_URL)
 
 # --- synthesis (LLM briefs, optional) -------------------------------------
 anthropic>=0.40        # only used if ANTHROPIC_API_KEY is set

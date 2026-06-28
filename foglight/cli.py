@@ -9,6 +9,8 @@ Subcommands:
     brief   <query>        fetch + synthesize a cited brief (+ mine graph)
     watch add/list/run     manage monitoring watchlists (run dispatches alerts)
     alerts test/status     test or inspect alert notifiers
+    ingest  <path>         ingest local files/dirs into memory + graph
+    profile <name>         entity/topic profile (static facts + recent activity)
     graph   stats          knowledge-graph summary
     serve                  run the REST API (needs fastapi/uvicorn)
 
@@ -18,11 +20,13 @@ Everything except `serve`/LLM runs offline using the mock channel.
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 
 from . import channels as channels_pkg
 from . import synthesis, doctor as doctor_mod, extract
 from . import alerts as alerts_mod
+from . import profile as profile_mod
 from .memory import get_memory
 from .monitor import Monitor, Watchlist
 from .graph import TemporalGraph
@@ -114,6 +118,28 @@ def cmd_alerts(args):
         print("dispatched:", sent)
 
 
+def cmd_ingest(args):
+    mem = get_memory(args.backend, DB)
+    items = channels_pkg.get("files").read(args.path)
+    n = mem.remember(items, space=args.space or "files",
+                     topic=os.path.basename(args.path.rstrip("/")))
+    extract.populate_graph(TemporalGraph(DB), items)
+    print(f"Ingested {len(items)} file(s); remembered {n} into {mem.name}.")
+
+
+def cmd_profile(args):
+    mem = get_memory(args.backend, DB)
+    p = profile_mod.build(args.name, DB, mem, space=args.space)
+    print(f"\nProfile: {p.name}  (source: {p.source}, "
+          f"known entity: {p.entity_known}, relations: {p.relations})\n")
+    print("Static (durable associations):")
+    for s in p.static or ["  (none yet)"]:
+        print(f"  • {s}")
+    print("\nDynamic (recent mentions):")
+    for d in p.dynamic or ["  (none yet)"]:
+        print(f"  • {d}")
+
+
 def cmd_graph(args):
     g = TemporalGraph(DB)
     print("Knowledge graph:", g.stats())
@@ -169,6 +195,14 @@ def build_parser() -> argparse.ArgumentParser:
     sp = sub.add_parser("alerts")
     sp.add_argument("action", choices=["test", "status"])
     sp.set_defaults(func=cmd_alerts)
+
+    sp = sub.add_parser("ingest"); sp.add_argument("path")
+    sp.add_argument("--space", default="")
+    sp.set_defaults(func=cmd_ingest)
+
+    sp = sub.add_parser("profile"); sp.add_argument("name")
+    sp.add_argument("--space", default="")
+    sp.set_defaults(func=cmd_profile)
 
     sp = sub.add_parser("graph"); sp.add_argument("sub", nargs="?", default="stats")
     sp.set_defaults(func=cmd_graph)

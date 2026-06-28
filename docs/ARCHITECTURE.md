@@ -33,21 +33,30 @@ channels. Shipped: `mock` (offline sample data), `web` (URL → clean text),
 `rss` (feeds), `github` (`gh` CLI), `youtube` (`yt-dlp`), `reddit` (`rdt`
 CLI), and `domain` (passive, keyless domain intelligence — RDAP/WHOIS, DNS
 over HTTPS, certificate-transparency subdomains, tech-stack from headers;
-domain-guarded so it ignores non-domain queries). Adding a source is one new
-file plus a `@register` decorator.
+domain-guarded so it ignores non-domain queries), and `files` (local document
+ingestion — text/code/JSON/HTML via stdlib, PDFs via optional `pypdf`;
+path-guarded). Adding a source is one new file plus a `@register` decorator.
 
-### 2. Memory & Scheduling — `memory.py`, `monitor.py`
-`MemoryBackend` is an interface with two implementations:
+### 2. Memory & Scheduling — `memory.py`, `profile.py`, `monitor.py`
+`MemoryBackend` is an interface with three implementations:
 - **`SQLiteMemory`** — zero-dependency default with TF-IDF-style keyword
   recall and a recency boost, so the system runs anywhere.
 - **`VectorMemory`** — optional embeddings backend (Chroma) for semantic
   recall.
+- **`SupermemoryMemory`** — optional adapter onto the Supermemory engine via
+  its Python SDK, against the hosted API (`SUPERMEMORY_API_KEY`) or a local
+  server (`SUPERMEMORY_BASE_URL`, offline). Adds fact extraction,
+  contradiction handling, auto-forgetting, hybrid RAG+memory, and native
+  `profile()`s.
 
-`get_memory("auto")` prefers the vector backend, falls back to SQLite. Both
-share a `space` / `topic` scoping vocabulary so they're interchangeable.
-`monitor.py` adds watchlists (saved query + channels + cadence), persists
-"seen" ids, mines the graph, and reports *new since last run*. Scheduling is
-delegated to the host via `due()` / `tick()`.
+`get_memory("auto")` prefers Supermemory, then the vector store, then SQLite;
+each fails fast when unavailable, so `auto` always resolves. All share a
+`space` / `topic` scoping vocabulary so they're interchangeable. `profile.py`
+builds an entity/topic profile (static associations + dynamic recent activity)
+from the knowledge graph + memory, or from the backend's native profile when
+one exists. `monitor.py` adds watchlists (saved query + channels + cadence),
+persists "seen" ids, mines the graph, and reports *new since last run*.
+Scheduling is delegated to the host via `due()` / `tick()`.
 
 ### 3. Intelligence — `dedup.py`, `graph.py`, `extract.py`, `analytics.py`
 - **Dedup** groups the same story across platforms into `Cluster`s by
@@ -72,7 +81,7 @@ social), key terms and a numbered reference list — fully offline.
 
 ## Surfaces
 - **CLI** (`cli.py`) — `doctor / search / read / remember / recall / brief /
-  watch / alerts / graph / serve`.
+  watch / alerts / ingest / profile / graph / serve`.
 - **REST API** (`api.py`, FastAPI) — powers the dashboard and any HTTP client.
 - **MCP server** (`mcp_server.py`) — exposes Foglight as MCP tools.
 - **Dashboard** (`webui/index.html`) — single static file; the non-developer

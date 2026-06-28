@@ -23,6 +23,7 @@ _STOP = {
     "In", "On", "For", "Is", "Are", "And", "Or", "But", "With", "As", "At",
     "By", "From", "To", "Of", "It", "Its", "Survey", "Hot", "Take", "Honest",
     "Thoughts", "Industry", "Big", "News", "Discussion", "Transcript",
+    "Mostly", "Strong", "Several", "Benchmarking", "Companies", "Recent",
 }
 
 
