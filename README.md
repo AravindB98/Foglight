@@ -137,3 +137,36 @@ tests/             stdlib unittest suite
 
 ## License
 MIT.
+
+---
+
+## 🧒 Explain Like I'm 5
+
+Imagine hiring a tireless assistant who watches the internet for you — news sites, feeds, forums — remembers everything it sees, and can answer 'what changed since last week?' Foglight is that assistant for both humans and AI agents: it watches, remembers over time, and serves what it learned through clean interfaces.
+
+## 🧰 Tech Stack
+
+Python · pluggable channel connectors · persistent memory store · temporal knowledge graph
+
+## 🌍 Real-Life Applications
+
+- Market and competitor monitoring that remembers history, not just headlines
+- Feeding AI agents fresh, structured knowledge of the live internet
+- Research monitoring — track a topic's evolution over months
+
+## 🤝 Contributing
+
+Contributions of every size are welcome!
+
+1. ⭐ **Star this repo** — it helps more people discover the project.
+2. 🍴 **Fork it** and create a feature branch (`git checkout -b feature/your-idea`).
+3. Commit your changes with clear messages.
+4. Open a Pull Request describing what you improved and why.
+
+Found a bug or have an idea? [Open an issue](https://github.com/AravindB98/Foglight/issues). And if this project helped you, please **star ⭐ and fork 🍴** — it genuinely helps the project grow.
+
+## 🔭 Future Scope
+
+- More channels (social, podcasts, video transcripts)
+- Alerting and anomaly detection on tracked entities
+- Shared memory layers for multi-agent systems
