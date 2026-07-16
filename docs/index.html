@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Foglight — All-seeing internet intelligence for agents and humans</title>
+<meta name="description" content="All-seeing internet intelligence for agents and humans — pluggable channels, persistent memory, temporal knowledge.">
+<style>
+:root{--accent:#ffd166;--bg:#0d1117;--card:#161b22;--border:#30363d;--text:#e6edf3;--muted:#8b949e}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.65}
+.wrap{max-width:960px;margin:0 auto;padding:0 20px}
+header{padding:72px 0 48px;text-align:center;background:radial-gradient(ellipse at top,color-mix(in srgb,var(--accent) 18%,transparent),transparent 65%)}
+h1{font-size:2.6rem;margin-bottom:8px}
+.emoji{font-size:3.2rem;display:block;margin-bottom:12px}
+.tagline{color:var(--muted);font-size:1.15rem;max-width:640px;margin:0 auto 24px}
+.btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn{padding:10px 22px;border-radius:8px;text-decoration:none;font-weight:600;font-size:.95rem}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-ghost{border:1px solid var(--border);color:var(--text)}
+section{padding:40px 0;border-top:1px solid var(--border)}
+h2{font-size:1.5rem;margin-bottom:16px;color:var(--accent)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.chip{display:inline-block;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:5px 14px;margin:4px;font-size:.88rem}
+ul.apps{list-style:none}ul.apps li{padding:8px 0 8px 28px;position:relative}
+ul.apps li:before{content:"✦";position:absolute;left:4px;color:var(--accent)}
+#demo{margin-top:8px}
+.demo-hint{color:var(--muted);font-size:.9rem;margin-bottom:14px}
+button.demo-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-weight:600;cursor:pointer;font-size:.92rem;margin:4px 6px 4px 0}
+button.demo-btn.ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+input[type=range]{accent-color:var(--accent)}
+canvas{background:#0a0e14;border:1px solid var(--border);border-radius:8px;max-width:100%}
+.mono{font-family:ui-monospace,Menlo,monospace;font-size:.85rem}
+footer{padding:36px 0;text-align:center;color:var(--muted);font-size:.9rem}
+footer a{color:var(--accent);text-decoration:none}
+.star-cta{background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 25%,var(--card)),var(--card));border:1px solid var(--accent);border-radius:12px;padding:24px;text-align:center;margin-top:8px}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<span class="emoji">🔦</span>
+<h1>Foglight</h1>
+<p class="tagline">All-seeing internet intelligence for agents and humans — pluggable channels, persistent memory, temporal knowledge.</p>
+<div class="btns">
+<a class="btn btn-primary" href="https://github.com/AravindB98/Foglight">View on GitHub</a>
+<a class="btn btn-ghost" href="#demo-sec">▶ Try the Demo</a>
+</div>
+</div></header>
+<div class="wrap">
+<section><h2>🧒 What is this? (Plain English)</h2><div class="card"><p>Imagine hiring a tireless assistant who watches the internet for you — news sites, feeds, forums — remembers everything it sees, and can answer 'what changed since last week?' Foglight is that assistant for both humans and AI agents: it watches, remembers over time, and serves what it learned through clean interfaces.</p></div></section>
+<section><h2>✨ Key Features</h2><div class="grid"><div class="card"><strong>Pluggable channels</strong><p style="color:var(--muted);margin-top:6px">News, feeds, forums — add a connector, gain a sense.</p></div><div class="card"><strong>Persistent memory</strong><p style="color:var(--muted);margin-top:6px">What it saw last month is still queryable today.</p></div><div class="card"><strong>Temporal knowledge graph</strong><p style="color:var(--muted);margin-top:6px">Facts carry timestamps; change becomes visible.</p></div><div class="card"><strong>Agent-ready</strong><p style="color:var(--muted);margin-top:6px">Serve fresh world-knowledge to AI agents via clean APIs.</p></div></div></section>
+<section id="demo-sec"><h2>🕹️ Interactive Demo</h2>
+<p class="demo-hint">Slide through the week and ask Foglight what changed about the tracked entity. <em>(Illustrative in-browser simulation of what the real system does.)</em></p>
+<div class="card" id="demo"><div class="mono">Tracking: <strong style="color:var(--accent)">Acme Robotics Inc.</strong> · Day <span id="fl-d">1</span>/7
+<input type="range" id="fl-r" min="1" max="7" value="1" style="width:100%" oninput="flDay(+this.value)"></div>
+<div id="fl-card" class="mono" style="border:1px solid var(--border);border-radius:8px;padding:14px;margin-top:10px;background:#0a0e14"></div>
+<button class="demo-btn" style="margin-top:10px" onclick="flDiff()">🔍 What changed this week?</button>
+<div id="fl-out" class="mono" style="margin-top:10px;font-size:.85rem"></div></div></section>
+<section><h2>🧰 Tech Stack</h2><div><span class="chip">Python</span><span class="chip">pluggable channel connectors</span><span class="chip">persistent memory store</span><span class="chip">temporal knowledge graph</span></div></section>
+<section><h2>🌍 Real-Life Applications</h2><ul class="apps"><li>Market and competitor monitoring that remembers history, not just headlines</li><li>Feeding AI agents fresh, structured knowledge of the live internet</li><li>Research monitoring — track a topic's evolution over months</li></ul></section>
+<section><h2>⭐ Support the Project</h2><div class="star-cta">
+<p style="margin-bottom:14px">If this project is useful or interesting to you, <strong>starring ⭐ and forking 🍴 the repo</strong> is the best way to support it and help others find it.</p>
+<div class="btns">
+<a class="btn btn-primary" href="https://github.com/AravindB98/Foglight/stargazers">⭐ Star</a>
+<a class="btn btn-ghost" href="https://github.com/AravindB98/Foglight/fork">🍴 Fork</a>
+<a class="btn btn-ghost" href="https://github.com/AravindB98/Foglight/issues">💬 Contribute</a>
+</div></div></section>
+</div>
+<footer>Built by <a href="https://github.com/AravindB98">Aravind Balaji</a> · <a href="https://aravindbalaji.com">aravindbalaji.com</a> · <a href="https://medium.com/@aravindbalaji25">Medium</a></footer>
+<script>
+
+const DAYS={1:['CEO: J. Marsh','Employees: ~1,200','Status: rumored Series D'],2:['CEO: J. Marsh','Employees: ~1,200','Status: Series D CONFIRMED $220M (TechWire)'],3:['CEO: J. Marsh','Employees: ~1,250 (hiring spree begins)','Status: Series D $220M'],4:['CEO: J. Marsh','New: opened Austin office','Employees: ~1,250'],5:['⚠ CEO: J. Marsh steps down (press release)','Interim CEO: R. Okafor','Employees: ~1,250'],6:['CEO: R. Okafor (interim)','Stock chatter: acquisition rumors (2 sources)','Employees: ~1,250'],7:['CEO: R. Okafor (interim)','Confirmed: acquisition talks with MegaCorp (Reuters)','Employees: ~1,240']};
+function flDay(d){document.getElementById('fl-d').textContent=d;
+document.getElementById('fl-card').innerHTML=DAYS[d].map(x=>'<div style="padding:3px 0;color:'+(x.startsWith('⚠')?'#f85149':'#e6edf3')+'">'+x+'</div>').join('');}
+flDay(1);
+function flDiff(){document.getElementById('fl-out').innerHTML='<div style="border:1px solid var(--accent);border-radius:8px;padding:12px">🕓 <strong>Temporal diff (day 1 → 7):</strong><br>• Funding: rumor → confirmed $220M (day 2)<br>• Leadership: J. Marsh → R. Okafor interim (day 5)<br>• New fact: acquisition talks w/ MegaCorp (day 7)<br><span style="color:var(--muted)">every fact timestamped & source-linked in the knowledge graph</span></div>';}
+
+</script>
+</body>
+</html>
